@@ -2,22 +2,24 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::path::Path;
 use std::sync::Mutex;
-use image::ImageEncoder;
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Graphics::Dwm::*;
 use windows_sys::Win32::Graphics::Gdi::*;
 use windows_sys::Win32::System::ProcessStatus::*;
 use windows_sys::Win32::System::Threading::*;
-use windows_sys::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYEVENTF_KEYUP};
-use windows_sys::Win32::UI::Shell::ExtractIconExW;
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
-static ICON_CACHE: std::sync::OnceLock<Mutex<HashMap<String, String>>> =
-    std::sync::OnceLock::new();
+lazy_static_icons!();
 
-fn get_icon_cache() -> &'static Mutex<HashMap<String, String>> {
-    ICON_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
- }
+// Macro to initialize global icon cache
+macro_rules! lazy_static_icons {
+    () => {
+        static ref_icons: std::sync::OnceLock<Mutex<HashMap<String, String>>> = std::sync::OnceLock::new();
+        fn get_icon_cache() -> &'static Mutex<HashMap<String, String>> {
+            ref_icons.get_or_init(|| Mutex::new(HashMap::new()))
+        }
+    };
+}
 
 /// Sets process as DPI aware so coordinate calculations match screen pixels 1:1
 pub fn set_dpi_aware() {
@@ -221,12 +223,13 @@ pub fn extract_icon_data_url(exe_path: &str) -> String {
             }
 
             let mut png_bytes = Vec::new();
-            if let Ok(_) = image::codecs::png::PngEncoder::new(&mut png_bytes).encode(
+            let png_encoder = image::codecs::png::PngEncoder::new(&mut png_bytes);
+            if png_encoder.write_image(
                 &rgba,
                 size as u32,
                 size as u32,
                 image::ExtendedColorType::Rgba8,
-            ) {
+            ).is_ok() {
                 format!("data:image/png;base64,{}", base64::Engine::encode(&base64::engine::general_purpose::STANDARD, png_bytes))
             } else {
                 String::new()
