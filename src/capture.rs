@@ -1,7 +1,13 @@
 use crate::win32::get_window_rect;
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Graphics::Gdi::*;
-use windows_sys::Win32::UI::WindowsAndMessaging::*;
+
+// Declare PrintWindow directly to keep this binding independent of generated module features.
+#[link(name = "user32")]
+extern "system" {
+    #[link_name = "PrintWindow"]
+    fn print_window(hwnd: HWND, hdc_blt: HDC, flags: u32) -> BOOL;
+}
 
 pub struct RawFrame {
     pub width: u32,
