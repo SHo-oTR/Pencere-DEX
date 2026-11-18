@@ -47,10 +47,10 @@ pub fn mouse_up() {
 pub fn mouse_scroll(dy: i32, dx: i32) {
     unsafe {
         if dy != 0 {
-            mouse_event(MOUSEEVENTF_WHEEL, 0, 0, dy as u32, 0);
+            mouse_event(MOUSEEVENTF_WHEEL, 0, 0, dy, 0);
         }
         if dx != 0 {
-            mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, dx as u32, 0);
+            mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, dx, 0);
         }
     }
 }
