@@ -50,7 +50,7 @@ pub fn capture_frame(hwnd: HWND, pw_mode: bool) -> Option<RawFrame> {
         let mut captured = false;
         if !hwnd.is_null() && pw_mode {
             // PW_RENDERFULLCONTENT = 2
-            let ok = PrintWindow(hwnd, mem_dc, 2);
+            let ok = print_window(hwnd, mem_dc, 2);
             captured = ok != 0;
         }
 
