@@ -1,6 +1,7 @@
 use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
 use image::codecs::webp::WebPEncoder;
+use image::ImageEncoder;
 use image::ColorType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -48,7 +49,7 @@ pub fn encode_image(
         }
         ImageFormat::Png => {
             let enc = PngEncoder::new(&mut out);
-            enc.encode(rgb_data, width, height, ColorType::Rgb8.into())?;
+            enc.write_image(rgb_data, width, height, image::ExtendedColorType::Rgb8)?;
         }
         ImageFormat::WebP => {
             let enc = WebPEncoder::new_lossless(&mut out);
