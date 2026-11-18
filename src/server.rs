@@ -19,7 +19,6 @@ use axum::{
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::ffi::c_void;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -27,6 +26,7 @@ use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::Notify;
+use windows_sys::Win32::Foundation::HWND;
 
 const INDEX_HTML: &str = include_str!("../static/index.html");
 
