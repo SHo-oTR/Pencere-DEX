@@ -293,7 +293,7 @@ async fn handle_ws(socket: WebSocket, state: AppState) {
 
             // Capture frame
             let pw_mode = state_send.pw_mode.load(Ordering::Relaxed);
-            if let Some(frame) = capture_frame(hwnd, pw_mode) {
+            if let Some(frame) = capture_frame(hwnd_isize as HWND, pw_mode) {
                 let w = frame.width as usize;
                 let h = frame.height as usize;
 
