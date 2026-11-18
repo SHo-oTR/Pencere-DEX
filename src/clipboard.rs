@@ -1,7 +1,7 @@
 use std::ffi::c_void;
-use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::System::DataExchange::*;
 use windows_sys::Win32::System::Memory::*;
+use windows_sys::Win32::System::Ole::{CF_HDROP, CF_UNICODETEXT};
 use windows_sys::Win32::UI::Shell::*;
 
 /// Sets UTF-16 text to Windows clipboard
