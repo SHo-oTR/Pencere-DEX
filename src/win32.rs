@@ -2,23 +2,39 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::path::Path;
 use std::sync::Mutex;
+use image::ImageEncoder;
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Graphics::Dwm::*;
 use windows_sys::Win32::Graphics::Gdi::*;
-use windows_sys::Win32::System::ProcessStatus::*;
 use windows_sys::Win32::System::Threading::*;
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
-lazy_static_icons!();
+// Explicit links avoid relying on generated windows-sys re-exports.
+const KEYEVENTF_KEYUP: u32 = 0x0002;
 
-// Macro to initialize global icon cache
-macro_rules! lazy_static_icons {
-    () => {
-        static ref_icons: std::sync::OnceLock<Mutex<HashMap<String, String>>> = std::sync::OnceLock::new();
-        fn get_icon_cache() -> &'static Mutex<HashMap<String, String>> {
-            ref_icons.get_or_init(|| Mutex::new(HashMap::new()))
-        }
-    };
+#[link(name = "user32")]
+extern "system" {
+    #[link_name = "keybd_event"]
+    fn keybd_event_ffi(b_vk: u8, b_scan: u8, dw_flags: u32, dw_extra_info: usize);
+}
+
+#[link(name = "shell32")]
+extern "system" {
+    #[link_name = "ExtractIconExW"]
+    fn extract_icon_ex_w(
+        file_name: *const u16,
+        icon_index: i32,
+        large_icon: *mut HICON,
+        small_icon: *mut HICON,
+        icon_count: u32,
+    ) -> u32;
+}
+
+static ICON_CACHE: std::sync::OnceLock<Mutex<HashMap<String, String>>> =
+    std::sync::OnceLock::new();
+
+fn get_icon_cache() -> &'static Mutex<HashMap<String, String>> {
+    ICON_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// Sets process as DPI aware so coordinate calculations match screen pixels 1:1
@@ -163,7 +179,13 @@ pub fn extract_icon_data_url(exe_path: &str) -> String {
         let mut hicon_large: HICON = std::ptr::null_mut();
         let mut hicon_small: HICON = std::ptr::null_mut();
 
-        let count = ExtractIconExW(path_utf16.as_ptr(), 0, &mut hicon_large, &mut hicon_small, 1);
+        let count = extract_icon_ex_w(
+            path_utf16.as_ptr(),
+            0,
+            &mut hicon_large,
+            &mut hicon_small,
+            1,
+        );
         let hicon = if !hicon_large.is_null() {
             hicon_large
         } else if !hicon_small.is_null() {
@@ -256,8 +278,8 @@ pub fn focus_window(hwnd: HWND) {
         ShowWindow(hwnd, SW_SHOWMAXIMIZED);
 
         // Alt key trick to bypass Windows SetForegroundWindow restrictions
-        keybd_event(0x12, 0, 0, 0);
-        keybd_event(0x12, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event_ffi(0x12, 0, 0, 0);
+        keybd_event_ffi(0x12, 0, KEYEVENTF_KEYUP, 0);
 
         SetForegroundWindow(hwnd);
     }
