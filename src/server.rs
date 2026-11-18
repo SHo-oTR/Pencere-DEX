@@ -239,10 +239,9 @@ async fn handle_ws(socket: WebSocket, state: AppState) {
 
         loop {
             let hwnd_isize = state_send.cur_hwnd.load(Ordering::Relaxed);
-            let hwnd = hwnd_isize as HWND;
 
             // Check if minimized: if window became iconic, fall back to desktop
-            if !hwnd.is_null() && is_window_iconic(hwnd) {
+            if hwnd_isize != 0 && is_window_iconic(hwnd_isize as HWND) {
                 state_send.cur_hwnd.store(0, Ordering::Relaxed);
             }
 
